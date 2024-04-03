@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using StoreAPI.Models;
 
 namespace StoreAPI.Data;
+// DB CODE FIRST
+//dotnet ef migrations add auth --context ApplicationDbContext
+//dotnet ef database update
 
 // public partial class ApplicationDbContext : DbContext //ข้อจะใช้ code fist เปิดบรรทัดนี้
 public partial class ApplicationDbContext : IdentityDbContext<IdentityUser>
