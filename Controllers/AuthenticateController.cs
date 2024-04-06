@@ -90,7 +90,7 @@ public class AuthenticateController : ControllerBase
     public async Task<IActionResult> RegisterManager([FromBody] RegisterModel model)
     {
         var userExists = await _userManager.FindByNameAsync(model.Username!);
-        if (userExists is not null)
+        if (userExists is null)
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new Response
