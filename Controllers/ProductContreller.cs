@@ -97,6 +97,7 @@ public class ProductController : ControllerBase
     // ฟังก์ชันสำหรับการเพิ่มข้อมูลสินค้า
     // POST: /api/Product
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<ActionResult<product>> CreateProduct([FromForm] product product, IFormFile image)
     {
         // เพิ่มข้อมูลลงในตาราง Products
