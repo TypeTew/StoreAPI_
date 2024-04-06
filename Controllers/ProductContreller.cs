@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StoreAPI.Data;
 using StoreAPI.Models;
 
 namespace StoreAPI.Controllers;
 
-
+[Authorize]
 [ApiController] // กำหนดให้ Class นี้เป็น API Controller
 [Route("api/[controller]")] // กำหนด Route ของ API Controller
 public class ProductController : ControllerBase
@@ -29,6 +30,7 @@ public class ProductController : ControllerBase
     // ทดสอบเขียนฟังก์ชันการเชื่อมต่อ database
     // GET: /api/Product/testconnectdb
     [HttpGet("testconnectdb")]
+    [AllowAnonymous]
     public void TestConnection()
     {
         // ถ้าเชื่อมต่อได้จะแสดงข้อความ "Connected"
@@ -97,7 +99,7 @@ public class ProductController : ControllerBase
     // ฟังก์ชันสำหรับการเพิ่มข้อมูลสินค้า
     // POST: /api/Product
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult<product>> CreateProduct([FromForm] product product, IFormFile image)
     {
         // เพิ่มข้อมูลลงในตาราง Products

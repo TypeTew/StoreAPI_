@@ -29,14 +29,25 @@ public class AuthenticateController : ControllerBase
         _configuration = configuration;
     }
 
+    // Register Role
+    [HttpPost]
+    [Route("register-role")]
+    public async Task<IActionResult> RegisterRole([FromBody] RegisterRoleModel model)
+    {
+        if (!await _roleManager.RoleExistsAsync(model.Role))
+            await _roleManager.CreateAsync(new IdentityRole(model.Role));
+
+        return Ok(new Response { Status = "Success", Message = "Role created successfully!" });
+    }
+
     // Register for user
     [HttpPost]
-    [ValidateAntiForgeryToken]
     [Route("register-user")]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
     {
+        // เช็คว่ามี username นี้ในระบบแล้วหรือไม่
         var userExists = await _userManager.FindByNameAsync(model.Username!);
-        if (userExists is null)
+        if (userExists is not null)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new Response
             {
@@ -45,6 +56,7 @@ public class AuthenticateController : ControllerBase
             });
         }
 
+        // เช็คว่ามี email นี้ในระบบแล้วหรือไม่
         IdentityUser user = new()
         {
             Email = model.Email,
@@ -52,7 +64,9 @@ public class AuthenticateController : ControllerBase
             UserName = model.Username
         };
 
+        // สร้าง user ใหม่
         var result = await _userManager.CreateAsync(user, model.Password!);
+        // ถ้าสร้างไม่สำเร็จ
         if (!result.Succeeded)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new Response
@@ -67,9 +81,9 @@ public class AuthenticateController : ControllerBase
             await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
         }
 
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager!))
+        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
         {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager!));
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
         }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.User))
@@ -84,12 +98,11 @@ public class AuthenticateController : ControllerBase
 
     // Register for manager
     [HttpPost]
-    [ValidateAntiForgeryToken]
     [Route("register-manager")]
     public async Task<IActionResult> RegisterManager([FromBody] RegisterModel model)
     {
         var userExists = await _userManager.FindByNameAsync(model.Username!);
-        if (userExists is null)
+        if (userExists is not null)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new Response
             {
@@ -121,10 +134,10 @@ public class AuthenticateController : ControllerBase
             await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
         }
 
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager!))
+        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
         {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager!));
-            await _userManager.AddToRoleAsync(user, UserRoles.Manager!);
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
+            await _userManager.AddToRoleAsync(user, UserRoles.Manager);
         }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.User))
@@ -137,12 +150,11 @@ public class AuthenticateController : ControllerBase
 
     // Register for admin
     [HttpPost]
-    [ValidateAntiForgeryToken]
     [Route("register-admin")]
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
     {
         var userExists = await _userManager.FindByNameAsync(model.Username!);
-        if (userExists is null)
+        if (userExists is not null)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new Response
             {
@@ -176,9 +188,9 @@ public class AuthenticateController : ControllerBase
             await _userManager.AddToRoleAsync(user, UserRoles.Admin);
         }
 
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager!))
+        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
         {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager!));
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
         }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.User))
@@ -191,7 +203,6 @@ public class AuthenticateController : ControllerBase
 
     // Login
     [HttpPost]
-    [ValidateAntiForgeryToken]
     [Route("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
@@ -228,7 +239,6 @@ public class AuthenticateController : ControllerBase
 
     // Refresh Token
     [HttpPost]
-    [ValidateAntiForgeryToken]
     [Route("refresh-token")]
     public IActionResult RefreshToken([FromBody] RefreshTokenModel model)
     {
@@ -283,7 +293,6 @@ public class AuthenticateController : ControllerBase
 
     // Logout
     [HttpPost]
-    [ValidateAntiForgeryToken]
     [Route("logout")]
     public async Task<IActionResult> Logout()
     {
