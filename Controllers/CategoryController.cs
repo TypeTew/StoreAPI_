@@ -61,7 +61,6 @@ public class CategoryController : ControllerBase
         }
 
         // แก้ไขข้อมูลสินค้า
-        existingCategory.products = category.products;
         existingCategory.category_name = category.category_name;
         existingCategory.category_status = category.category_status;
 
