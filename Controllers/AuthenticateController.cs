@@ -53,7 +53,7 @@ public class AuthenticateController : ControllerBase
         };
 
         var result = await _userManager.CreateAsync(user, model.Password!);
-        if (result.Succeeded == false)
+        if (!result.Succeeded)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new Response
             {
@@ -67,9 +67,9 @@ public class AuthenticateController : ControllerBase
             await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
         }
 
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
+        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager!))
         {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager!));
         }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.User))
@@ -106,7 +106,7 @@ public class AuthenticateController : ControllerBase
         };
 
         var result = await _userManager.CreateAsync(user, model.Password!);
-        if (result is null || result.Succeeded == false)
+        if (!result.Succeeded)
         {
             var errors = string.Join(", ", result!.Errors.Select(e => e.Description));
             return StatusCode(StatusCodes.Status500InternalServerError, new Response
@@ -121,10 +121,10 @@ public class AuthenticateController : ControllerBase
             await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
         }
 
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
+        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager!))
         {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
-            await _userManager.AddToRoleAsync(user, UserRoles.Manager);
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager!));
+            await _userManager.AddToRoleAsync(user, UserRoles.Manager!);
         }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.User))
@@ -137,6 +137,7 @@ public class AuthenticateController : ControllerBase
 
     // Register for admin
     [HttpPost]
+    [ValidateAntiForgeryToken]
     [Route("register-admin")]
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
     {
@@ -176,9 +177,9 @@ public class AuthenticateController : ControllerBase
             await _userManager.AddToRoleAsync(user, UserRoles.Admin);
         }
 
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
+        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager!))
         {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager!));
         }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.User))
@@ -191,6 +192,7 @@ public class AuthenticateController : ControllerBase
 
     // Login
     [HttpPost]
+    [ValidateAntiForgeryToken]
     [Route("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
@@ -227,6 +229,7 @@ public class AuthenticateController : ControllerBase
 
     // Refresh Token
     [HttpPost]
+    [ValidateAntiForgeryToken]
     [Route("refresh-token")]
     public IActionResult RefreshToken([FromBody] RefreshTokenModel model)
     {
@@ -281,6 +284,7 @@ public class AuthenticateController : ControllerBase
 
     // Logout
     [HttpPost]
+    [ValidateAntiForgeryToken]
     [Route("logout")]
     public async Task<IActionResult> Logout()
     {
