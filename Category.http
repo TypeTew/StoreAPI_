@@ -1,0 +1,38 @@
+@StoreAPI_HostAddress = http://localhost:5068/api
+@StoreAPI_AccessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiaWFtc2FtaXQiLCJqdGkiOiI1OGY1NjJkMC1hNWY3LTRhNjAtYjJlOS1kNWRmMWM3YzExNDIiLCJleHAiOjE3MTI0ODg1NTEsImlzcyI6IioiLCJhdWQiOiIqIn0.zoHSZ4j_Ch81G3XV8YxvkWDW_xDOkCCT-XTXUfd1Lwo
+
+##
+
+POST {{StoreAPI_HostAddress}}/Category 
+Accept: application/json
+Authorization: Bearer {{StoreAPI_AccessToken}}
+
+{
+  "category_id": 0,
+  "category_name": "Electronics",
+  "category_status": 1,
+  "products": []
+}
+
+
+###
+
+// Update product
+PUT {{StoreAPI_HostAddress}}/Category/5
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{StoreAPI_AccessToken}}
+
+{
+  "category_id": 0,
+  "category_name": "T11T1",
+  "category_status": 1,
+  "products": []
+}
+
+###
+
+DELETE {{StoreAPI_HostAddress}}/Category/7
+Accept: application/json
+Authorization: Bearer {{StoreAPI_AccessToken}}
+

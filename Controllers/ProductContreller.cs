@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StoreAPI.Data;
 using StoreAPI.Models;
 
+namespace StoreAPI.Controllers;
 
+[Authorize]
 [ApiController] // กำหนดให้ Class นี้เป็น API Controller
 [Route("api/[controller]")] // กำหนด Route ของ API Controller
 public class ProductController : ControllerBase
@@ -27,6 +30,7 @@ public class ProductController : ControllerBase
     // ทดสอบเขียนฟังก์ชันการเชื่อมต่อ database
     // GET: /api/Product/testconnectdb
     [HttpGet("testconnectdb")]
+    [AllowAnonymous]
     public void TestConnection()
     {
         // ถ้าเชื่อมต่อได้จะแสดงข้อความ "Connected"
@@ -95,10 +99,36 @@ public class ProductController : ControllerBase
     // ฟังก์ชันสำหรับการเพิ่มข้อมูลสินค้า
     // POST: /api/Product
     [HttpPost]
-    public ActionResult<product> CreateProduct(product product)
+    //[ValidateAntiForgeryToken]
+    public async Task<ActionResult<product>> CreateProduct([FromForm] product product, IFormFile image)
     {
         // เพิ่มข้อมูลลงในตาราง Products
         _context.products.Add(product);
+
+        // ตรวจสอบว่ามีการอัพโหลดไฟล์รูปภาพหรือไม่
+        if (image != null)
+        {
+            // กำหนดชื่อไฟล์รูปภาพใหม่
+            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
+
+            // บันทึกไฟล์รูปภาพ
+            string uploadFolder = Path.Combine(_env.ContentRootPath, "uploads");
+
+            // ตรวจสอบว่าโฟลเดอร์ uploads มีหรือไม่
+            if (!Directory.Exists(uploadFolder))
+            {
+                Directory.CreateDirectory(uploadFolder);
+            }
+
+            using (var fileStream = new FileStream(Path.Combine(uploadFolder, fileName), FileMode.Create))
+            {
+                await image.CopyToAsync(fileStream);
+            }
+
+            // บันทึกชื่อไฟล์รูปภาพลงในฐานข้อมูล
+            product.product_picture = fileName;
+        }
+
         _context.SaveChanges();
 
         // ส่งข้อมูลกลับไปให้ผู้ใช้
@@ -124,6 +154,7 @@ public class ProductController : ControllerBase
         existingProduct.unit_price = product.unit_price;
         existingProduct.unit_in_stock = product.unit_in_stock;
         existingProduct.category_id = product.category_id;
+        existingProduct.product_picture = product.product_picture;
 
         // บันทึกข้อมูล
         _context.SaveChanges();
