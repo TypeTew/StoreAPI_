@@ -27,7 +27,7 @@ Authorization: Bearer {{StoreAPI_AccessToken}}
 ###
 
 
-###
+
 
 // Create a new product with file upload
 POST {{StoreAPI_HostAddress}}/Product 

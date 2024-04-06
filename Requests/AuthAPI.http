@@ -1,6 +1,7 @@
 @AuthAPI_HostAddress = http://localhost:5068/api/Authenticate
 
 
+
 // Register User API
 POST {{AuthAPI_HostAddress}}/register_user
 Content-Type: application/json
@@ -12,6 +13,7 @@ Content-Type: application/json
 }
 ###
 
+
 // Register Admin API
 POST {{AuthAPI_HostAddress}}/register-admin
 Content-Type: application/json
@@ -21,6 +23,7 @@ Content-Type: application/json
   "email": "adminsamit@email.com",
   "password": "AdminSamit@1234"
 }
+
 
 
 ###
