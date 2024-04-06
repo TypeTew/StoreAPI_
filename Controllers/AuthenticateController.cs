@@ -35,7 +35,7 @@ public class AuthenticateController : ControllerBase
     public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
     {
         var userExists = await _userManager.FindByNameAsync(model.Username!);
-        if (userExists is not null)
+        if (userExists is null)
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new Response
@@ -108,16 +108,15 @@ public class AuthenticateController : ControllerBase
         };
 
         var result = await _userManager.CreateAsync(user, model.Password!);
-
-        if (!result.Succeeded)
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new Response
-                {
-                    Status = "Error",
-                    Message = "User creation failed! Please check user details and try again."
-                }
-            );
+        if (result is null || result.Succeeded == false)
+        {
+            var errors = string.Join(", ", result!.Errors.Select(e => e.Description));
+            return StatusCode(StatusCodes.Status500InternalServerError, new Response
+            {
+                Status = "Error",
+                Message = $"User creation failed! Errors: {errors}"
+            });
+        }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
         {
@@ -144,7 +143,7 @@ public class AuthenticateController : ControllerBase
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
     {
         var userExists = await _userManager.FindByNameAsync(model.Username!);
-        if (userExists != null)
+        if (userExists is null)
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new Response
