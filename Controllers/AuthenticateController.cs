@@ -31,19 +31,19 @@ public class AuthenticateController : ControllerBase
 
     // Register for user
     [HttpPost]
+    [ValidateAntiForgeryToken]
     [Route("register-user")]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
     {
         var userExists = await _userManager.FindByNameAsync(model.Username!);
         if (userExists is null)
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new Response
-                {
-                    Status = "Error",
-                    Message = "User already exists!"
-                }
-            );
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new Response
+            {
+                Status = "Error",
+                Message = "User already exists!"
+            });
+        }
 
         IdentityUser user = new()
         {
@@ -53,16 +53,14 @@ public class AuthenticateController : ControllerBase
         };
 
         var result = await _userManager.CreateAsync(user, model.Password!);
-
-        if (!result.Succeeded)
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new Response
-                {
-                    Status = "Error",
-                    Message = "User creation failed! Please check user details and try again."
-                }
-            );
+        if (result.Succeeded == false)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new Response
+            {
+                Status = "Error",
+                Message = "User creation failed! Please check user details and try again."
+            });
+        }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
         {
@@ -86,19 +84,19 @@ public class AuthenticateController : ControllerBase
 
     // Register for manager
     [HttpPost]
+    [ValidateAntiForgeryToken]
     [Route("register-manager")]
     public async Task<IActionResult> RegisterManager([FromBody] RegisterModel model)
     {
         var userExists = await _userManager.FindByNameAsync(model.Username!);
         if (userExists is null)
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new Response
-                {
-                    Status = "Error",
-                    Message = "User already exists!"
-                }
-            );
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new Response
+            {
+                Status = "Error",
+                Message = "User already exists!"
+            });
+        }
 
         IdentityUser user = new()
         {
@@ -247,7 +245,7 @@ public class AuthenticateController : ControllerBase
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = false,
                     ValidateAudience = false,
-                    ValidateLifetime = false,
+                    ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 }, out SecurityToken validatedToken);
 
