@@ -143,14 +143,14 @@ public class AuthenticateController : ControllerBase
     {
         var userExists = await _userManager.FindByNameAsync(model.Username!);
         if (userExists is null)
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new Response
-                {
-                    Status = "Error",
-                    Message = "User already exists!"
-                }
-            );
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new Response
+            {
+                Status = "Error",
+                Message = "User already exists!"
+            });
+        }
+
 
         IdentityUser user = new()
         {
@@ -160,16 +160,15 @@ public class AuthenticateController : ControllerBase
         };
 
         var result = await _userManager.CreateAsync(user, model.Password!);
-
         if (!result.Succeeded)
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new Response
-                {
-                    Status = "Error",
-                    Message = "User creation failed! Please check user details and try again."
-                }
-            );
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new Response
+            {
+                Status = "Error",
+                Message = "User creation failed! Please check user details and try again."
+            });
+        }
+
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
         {
