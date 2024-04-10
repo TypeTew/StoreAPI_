@@ -42,7 +42,7 @@ public class AuthenticateController : ControllerBase
 
     // Register for user
     [HttpPost]
-    [Route("register-user")]
+    [Route("register")]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
     {
         // เช็คว่ามี username นี้ในระบบแล้วหรือไม่
@@ -74,22 +74,6 @@ public class AuthenticateController : ControllerBase
                 Status = "Error",
                 Message = "User creation failed! Please check user details and try again."
             });
-        }
-
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
-        {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
-        }
-
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
-        {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
-        }
-
-        if (!await _roleManager.RoleExistsAsync(UserRoles.User))
-        {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
-            await _userManager.AddToRoleAsync(user, UserRoles.User);
         }
 
         return Ok(new Response { Status = "Success", Message = "User created successfully!" });
@@ -329,7 +313,5 @@ public class AuthenticateController : ControllerBase
         public required string Token { get; set; }
 
     }
-
-
 
 }

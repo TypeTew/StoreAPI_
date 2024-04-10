@@ -40,7 +40,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<category>> PostCategory(category category)
+    public async Task<ActionResult<category>> PostCategory([FromBody] category category)
     {
         _context.categories.Add(category);
         await _context.SaveChangesAsync();
@@ -49,10 +49,10 @@ public class CategoryController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public ActionResult<product> UpdateCategory(int id, category category)
+    public ActionResult<product> UpdateCategory(int id, [FromBody] category category)
     {
         // ดึงข้อมูลสินค้าตาม id
-        var existingCategory = _context.categories.FirstOrDefault(p => p.category_id == id);
+        var existingCategory = _context.categories.Find(id);
 
         // ถ้าไม่พบข้อมูลจะแสดงข้อความ Not Found
         if (existingCategory == null)
@@ -62,7 +62,7 @@ public class CategoryController : ControllerBase
 
         // แก้ไขข้อมูลสินค้า
         existingCategory.category_name = category.category_name;
-        existingCategory.category_status = category.category_status;
+
 
         // บันทึกข้อมูล
         _context.SaveChanges();
