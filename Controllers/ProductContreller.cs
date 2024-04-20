@@ -68,6 +68,9 @@ public class ProductController : ControllerBase
                     p.product_name,
                     p.unit_price,
                     p.unit_in_stock,
+                    p.product_picture,
+                    p.created_date,
+                    p.modified_date,
                     c.category_name
                 }
             ).ToList();
@@ -83,7 +86,27 @@ public class ProductController : ControllerBase
     public ActionResult<product> GetProduct(int id)
     {
         // LINQ สำหรับการดึงข้อมูลจากตาราง Products ตาม id
-        var product = _context.products.FirstOrDefault(p => p.product_id == id);
+        // var product = _context.products.FirstOrDefault(p => p.product_id == id);
+
+
+        var product = _context.products
+            .Join(
+                _context.categories,
+                p => p.category_id,
+                c => c.category_id,
+                (p, c) => new
+                {
+                    p.product_id,
+                    p.product_name,
+                    p.unit_price,
+                    p.unit_in_stock,
+                    p.product_picture,
+                    p.created_date,
+                    p.modified_date,
+                    c.category_name
+                }
+            )
+            .FirstOrDefault(p => p.product_id == id);
 
         // ถ้าไม่พบข้อมูลจะแสดงข้อความ Not Found
         if (product == null)
