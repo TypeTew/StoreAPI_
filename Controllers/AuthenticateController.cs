@@ -1,8 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StoreAPI.Models;
 
@@ -29,6 +31,7 @@ public class AuthenticateController : ControllerBase
         _configuration = configuration;
     }
 
+
     // Register Role
     [HttpPost]
     [Route("register-role")]
@@ -40,9 +43,10 @@ public class AuthenticateController : ControllerBase
         return Ok(new Response { Status = "Success", Message = "Role created successfully!" });
     }
 
-    // Register for user
+    // Register for User
+    // Post api/authenticate/register-user
     [HttpPost]
-    [Route("register")]
+    [Route("register-user")]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
     {
         // เช็คว่ามี username นี้ในระบบแล้วหรือไม่
@@ -76,7 +80,28 @@ public class AuthenticateController : ControllerBase
             });
         }
 
-        return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        // กำหนด Roles Admin, Manager, User
+        if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
+        {
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+        }
+
+        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
+        {
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
+        }
+
+        if (await _roleManager.RoleExistsAsync(UserRoles.User))
+        {
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+            await _userManager.AddToRoleAsync(user, UserRoles.User);
+        }
+
+        return Ok(new Response
+        {
+            Status = "Success",
+            Message = "User created successfully!"
+        });
     }
 
 
@@ -85,6 +110,7 @@ public class AuthenticateController : ControllerBase
     [Route("register-manager")]
     public async Task<IActionResult> RegisterManager([FromBody] RegisterModel model)
     {
+        // เช็คว่า username ซ้ำหรือไม่
         var userExists = await _userManager.FindByNameAsync(model.Username!);
         if (userExists is not null)
         {
@@ -95,14 +121,31 @@ public class AuthenticateController : ControllerBase
             });
         }
 
+        // เช็คว่า email ซ้ำหรือไม่
+        userExists = await _userManager.FindByEmailAsync(model.Email);
+        if (userExists is not null)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new Response
+                {
+                    Status = "Error",
+                    Message = "Email already exists!"
+                }
+            );
+        }
+
+
+        // สร้าง User
         IdentityUser user = new()
         {
             Email = model.Email,
             SecurityStamp = Guid.NewGuid().ToString(),
             UserName = model.Username
         };
-
+        // สร้าง User ในระบบ
         var result = await _userManager.CreateAsync(user, model.Password!);
+        // ถ้าสร้างไม่สำเร็จ
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result!.Errors.Select(e => e.Description));
@@ -113,15 +156,10 @@ public class AuthenticateController : ControllerBase
             });
         }
 
+        // กำหนด Roles Admin, Manager, User
         if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
         {
             await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
-        }
-
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
-        {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
-            await _userManager.AddToRoleAsync(user, UserRoles.Manager);
         }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.User))
@@ -129,7 +167,17 @@ public class AuthenticateController : ControllerBase
             await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
         }
 
-        return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        if (await _roleManager.RoleExistsAsync(UserRoles.Manager))
+        {
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
+            await _userManager.AddToRoleAsync(user, UserRoles.Manager);
+        }
+
+        return Ok(new Response
+        {
+            Status = "Success",
+            Message = "User registered successfully!"
+        });
     }
 
     // Register for admin
@@ -137,6 +185,7 @@ public class AuthenticateController : ControllerBase
     [Route("register-admin")]
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
     {
+        // เช็คว่า username ซ้ำหรือไม่
         var userExists = await _userManager.FindByNameAsync(model.Username!);
         if (userExists is not null)
         {
@@ -147,15 +196,16 @@ public class AuthenticateController : ControllerBase
             });
         }
 
-
+        // สร้าง User
         IdentityUser user = new()
         {
             Email = model.Email,
             SecurityStamp = Guid.NewGuid().ToString(),
             UserName = model.Username
         };
-
+        // สร้าง User ในระบบ
         var result = await _userManager.CreateAsync(user, model.Password!);
+        // ถ้าสร้างไม่สำเร็จ
         if (!result.Succeeded)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new Response
@@ -166,10 +216,10 @@ public class AuthenticateController : ControllerBase
         }
 
 
-        if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
+        // กำหนด Roles Admin, Manager, User
+        if (!await _roleManager.RoleExistsAsync(UserRoles.User))
         {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
-            await _userManager.AddToRoleAsync(user, UserRoles.Admin);
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
         }
 
         if (!await _roleManager.RoleExistsAsync(UserRoles.Manager))
@@ -177,12 +227,17 @@ public class AuthenticateController : ControllerBase
             await _roleManager.CreateAsync(new IdentityRole(UserRoles.Manager));
         }
 
-        if (!await _roleManager.RoleExistsAsync(UserRoles.User))
+        if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
         {
-            await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+            await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+            await _userManager.AddToRoleAsync(user, UserRoles.Admin);
         }
 
-        return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        return Ok(new Response
+        {
+            Status = "Success",
+            Message = "User registered successfully!"
+        });
     }
 
     // Login
@@ -213,7 +268,13 @@ public class AuthenticateController : ControllerBase
             return Ok(new
             {
                 token = new JwtSecurityTokenHandler().WriteToken(token),
-                expiration = token.ValidTo
+                expiration = token.ValidTo,
+                userData = new
+                {
+                    userName = user.UserName,
+                    email = user.Email,
+                    roles = userRoles
+                }
             });
         }
 
